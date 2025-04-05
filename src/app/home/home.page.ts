@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -13,16 +14,54 @@ export class HomePage {
   selectedFridge: string = '';
   temperature: number | null = null;
 
-  constructor() {}
+  constructor(
+    private toastController: ToastController,
+    private router: Router,
+    private alertController: AlertController
+  ) {}
 
-  logTemperature() {
+  async logTemperature() {
+    if (!this.selectedFridge) {
+      await this.presentAlert('Error', 'Please select a fridge.');
+      return;
+    }
+
+    if (this.temperature === null || this.temperature === undefined) {
+      await this.presentAlert('Error', 'Please enter the temperature.');
+      return;
+    }
+
     const now = new Date();
-    const timestamp = now.toISOString(); // Get ISO 8601 timestamp (includes date and time)
+    const timestamp = now.toISOString();
 
     console.log('Selected Fridge:', this.selectedFridge);
     console.log('Temperature:', this.temperature);
     console.log('Timestamp:', timestamp);
 
-    // Here, we will later send this data (selectedFridge, temperature, timestamp) to Firebase
+    await this.presentToast('Temperature logged successfully!');
+    this.router.navigate(['/log']);
+  }
+
+  goToLog() {
+    this.router.navigate(['/log'])
+  }
+
+  async presentToast(message: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000,
+      position: 'bottom',
+    });
+    await toast.present();
+  }
+
+  async presentAlert(header: string, message: string) {
+    const alert = await this.alertController.create({
+      header: header,
+      message: message,
+      buttons: ['OK'],
+    });
+
+    await alert.present();
   }
 }

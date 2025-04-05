@@ -1,11 +1,15 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Temperature Log</ion-title>
+    <ion-buttons slot="primary">
+      <ion-button (click)="goHome()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <h1>Temperature Log</h1>
   <p>This page will display the logged temperature data.</p>
-
-  </ion-content>
+</ion-content>
