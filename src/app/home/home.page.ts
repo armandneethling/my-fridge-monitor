@@ -1,23 +1,34 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular'; // Correct import for IonicModule
 import { Router } from '@angular/router';
+import { collection, addDoc, Firestore } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+
+interface TemperatureLog {
+  fridge: string;
+  temperature: number | null;
+  timestamp: string;
+}
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   standalone: true,
-  imports: [IonicModule, FormsModule],
+  imports: [IonicModule, FormsModule], // Correct imports array
+  providers: [], // Crucially, no providers here!
 })
 export class HomePage {
   selectedFridge: string = '';
   temperature: number | null = null;
+  private firestore: Firestore = inject(Firestore);
 
   constructor(
     private toastController: ToastController,
     private router: Router,
-    private alertController: AlertController
+    private alertController: AlertController,
   ) {}
 
   async logTemperature() {
@@ -34,16 +45,25 @@ export class HomePage {
     const now = new Date();
     const timestamp = now.toISOString();
 
-    console.log('Selected Fridge:', this.selectedFridge);
-    console.log('Temperature:', this.temperature);
-    console.log('Timestamp:', timestamp);
+    const logEntry: TemperatureLog = {
+      fridge: this.selectedFridge,
+      temperature: this.temperature,
+      timestamp: timestamp,
+    };
 
-    await this.presentToast('Temperature logged successfully!');
-    this.router.navigate(['/log']);
+    try {
+      const temperatureLogsCollection = collection(this.firestore, 'temperatureLogs');
+      await addDoc(temperatureLogsCollection, logEntry);
+      await this.presentToast('Temperature logged successfully!');
+      this.router.navigate(['/log']);
+    } catch (error) {
+      console.error('Error logging temperature:', error);
+      await this.presentAlert('Error', 'Failed to log temperature. Please try again.');
+    }
   }
 
   goToLog() {
-    this.router.navigate(['/log'])
+    this.router.navigate(['/log']);
   }
 
   async presentToast(message: string) {

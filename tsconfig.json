@@ -18,8 +18,14 @@
     "importHelpers": true,
     "target": "es2022",
     "module": "es2020",
-    "lib": ["es2018", "dom"],
-    "useDefineForClassFields": false
+    "lib": ["es2022", "dom"],
+    "useDefineForClassFields": false,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"],  // THIS IS CRUCIAL!
+    "resolveJsonModule": true,
+    "paths": {
+      "*": ["./src/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
