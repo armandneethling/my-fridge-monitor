@@ -1,20 +1,29 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Blank
+      Log Fridge Temperature
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-item>
+    <ion-label>Select Fridge</ion-label>
+    <ion-select [(ngModel)]="selectedFridge" interface="action-sheet">
+      <ion-select-option value="fridge1">Fridge 1</ion-select-option>
+      <ion-select-option value="fridge2">Fridge 2</ion-select-option>
+      <ion-select-option value="fridge3">Fridge 3</ion-select-option>
+      <ion-select-option value="fridge4">Fridge 4</ion-select-option>
+      <ion-select-option value="fridge5">Fridge 5</ion-select-option>
+      <ion-select-option value="fridge6">Fridge 6</ion-select-option>
+      <ion-select-option value="fridge7">Fridge 7</ion-select-option>
+    </ion-select>
+  </ion-item>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+  <ion-item>
+    <ion-label position="floating">Temperature (°C or °F)</ion-label>
+    <ion-input type="number" [(ngModel)]="temperature"></ion-input>
+  </ion-item>
+
+  <ion-button expand="full" (click)="logTemperature()">Log Temperature</ion-button>
 </ion-content>
