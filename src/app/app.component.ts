@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { addIcons } from 'ionicons';
+import { arrowBackOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-root',
@@ -9,5 +10,9 @@ import { Router } from '@angular/router';
   imports: [IonicModule],
 })
 export class AppComponent {
-  constructor(private router: Router) {}
+  constructor() {
+    addIcons({
+      'arrow-back-outline': arrowBackOutline,
+    });
+  }
 }

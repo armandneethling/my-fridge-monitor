@@ -1,13 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, AlertController } from '@ionic/angular'; // Correct import for IonicModule
+import { IonicModule, ToastController, AlertController, IonSelect } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { collection, addDoc, Firestore } from '@angular/fire/firestore';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
 
-interface TemperatureLog {
-  fridge: string;
+export interface TemperatureLog {
+  fridgeValue: string;
+  fridgeName: string;
   temperature: number | null;
   timestamp: string;
 }
@@ -17,22 +16,23 @@ interface TemperatureLog {
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
   standalone: true,
-  imports: [IonicModule, FormsModule], // Correct imports array
-  providers: [], // Crucially, no providers here!
+  imports: [IonicModule, FormsModule],
+  providers: [],
 })
 export class HomePage {
-  selectedFridge: string = '';
+  selectedFridgeValue: string = ''; // Rename selectedFridge to selectedFridgeValue
+  selectedFridgeName: string = 'Unknown Fridge'; // Add a property for the name
   temperature: number | null = null;
+
+  private toastController = inject(ToastController);
+  private router = inject(Router);
+  private alertController = inject(AlertController);
   private firestore: Firestore = inject(Firestore);
 
-  constructor(
-    private toastController: ToastController,
-    private router: Router,
-    private alertController: AlertController,
-  ) {}
+  constructor() {}
 
   async logTemperature() {
-    if (!this.selectedFridge) {
+    if (!this.selectedFridgeValue) {
       await this.presentAlert('Error', 'Please select a fridge.');
       return;
     }
@@ -46,7 +46,8 @@ export class HomePage {
     const timestamp = now.toISOString();
 
     const logEntry: TemperatureLog = {
-      fridge: this.selectedFridge,
+      fridgeValue: this.selectedFridgeValue,
+      fridgeName: this.selectedFridgeName,
       temperature: this.temperature,
       timestamp: timestamp,
     };
@@ -83,5 +84,18 @@ export class HomePage {
     });
 
     await alert.present();
+  }
+
+  fridgeChanged(event: any) {
+    const selectedValue = event.target.value;
+    this.selectedFridgeValue = selectedValue;
+
+    // Find the selected option's text
+    const selectedOption = Array.from(event.target.options as HTMLOptionElement[]).find(
+      (option) => option.value === selectedValue
+    );
+    this.selectedFridgeName = selectedOption && selectedOption.textContent
+      ? selectedOption.textContent.trim()
+      : 'Unknown Fridge';
   }
 }

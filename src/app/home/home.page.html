@@ -7,7 +7,11 @@
 <ion-content [fullscreen]="true">
   <ion-item>
     <ion-label>Select Fridge</ion-label>
-    <ion-select [(ngModel)]="selectedFridge" interface="action-sheet">
+    <ion-select
+      [(ngModel)]="selectedFridgeValue"
+      (ionChange)="fridgeChanged($event)"
+      interface="action-sheet"
+    >
       <ion-select-option value="fridge1">Cooldrink Fridge</ion-select-option>
       <ion-select-option value="fridge2">Salad Fridge</ion-select-option>
       <ion-select-option value="fridge3">Dough Fridge</ion-select-option>

@@ -11,5 +11,14 @@
 
 <ion-content [fullscreen]="true">
   <h1>Temperature Log</h1>
-  <p>This page will display the logged temperature data.</p>
+
+  <ion-list>
+    <ion-item *ngFor="let log of temperatureLogs">
+      <ion-label>
+        <h2>{{ log.fridgeName }}</h2>
+        <p>Temperature: {{ log.temperature }} °C</p>
+        <p>Logged at: {{ log.timestamp | date:'medium' }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
 </ion-content>
