@@ -5,5 +5,5 @@ import { LogPage } from './log/log.page';
 export const routes: Routes = [
   { path: 'home', component: HomePage },
   { path: 'log', component: LogPage },
-  { path: '', redirectTo: 'home', pathMatch: 'full' }
+  { path: '', component: HomePage, pathMatch: 'full' }
 ];

@@ -1,5 +1,5 @@
 import { enableProdMode } from '@angular/core';
-import { bootstrapApplication } from '@angular/platform-browser';
+import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
 import {
   RouteReuseStrategy,
   provideRouter,
@@ -18,23 +18,9 @@ import { firebaseConfig } from './environments/firebase';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
-import { IonicModule } from '@ionic/angular';
+import { environment } from './environments/environment';
 
-interface ImportMetaEnv {
-  readonly PROD: boolean;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
-declare global {
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
-}
-
-if (import.meta.env.PROD) {
+if (environment.production) {
   enableProdMode();
 }
 
@@ -46,6 +32,5 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideFirestore(() => getFirestore()),
-  ],
-  ...IonicModule.forRoot().providers,
+  ]
 }).catch((err) => console.error(err));
