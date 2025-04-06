@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { arrowBackOutline } from 'ionicons/icons';
+import { arrowBackOutline, trash } from 'ionicons/icons';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +13,7 @@ export class AppComponent {
   constructor() {
     addIcons({
       'arrow-back-outline': arrowBackOutline,
+      'trash': trash,
     });
   }
 }

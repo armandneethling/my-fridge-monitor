@@ -87,15 +87,19 @@ export class HomePage {
   }
 
   fridgeChanged(event: any) {
-    const selectedValue = event.target.value;
-    this.selectedFridgeValue = selectedValue;
+    this.selectedFridgeValue = event.detail.value;
 
-    // Find the selected option's text
-    const selectedOption = Array.from(event.target.options as HTMLOptionElement[]).find(
-      (option) => option.value === selectedValue
-    );
-    this.selectedFridgeName = selectedOption && selectedOption.textContent
-      ? selectedOption.textContent.trim()
-      : 'Unknown Fridge';
+    console.log('fridgeChanged called');
+    console.log('selectedValue:', event.detail.value);
+    console.log('event.target:', event.target);
+    console.log('event.detail:', event.detail);
+
+    // Access selected text from ion-select-option elements
+    const selectElement = event.target as HTMLIonSelectElement;
+    const selectedText = Array.from(selectElement.querySelectorAll(`ion-select-option[value="${event.detail.value}"]`))
+      .map(option => option.textContent ? option.textContent.trim() : '')[0];
+    this.selectedFridgeName = selectedText || 'Unknown Fridge';
+
+    console.log('selectedFridgeName:', this.selectedFridgeName);
   }
 }

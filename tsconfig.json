@@ -1,4 +1,4 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
+/* To learn more about this file see: https://angular.io/config/tsconfig.json */
 {
   "compileOnSave": false,
   "compilerOptions": {
@@ -21,7 +21,7 @@
     "lib": ["es2022", "dom"],
     "useDefineForClassFields": false,
     "allowSyntheticDefaultImports": true,
-    "types": ["node"],  // THIS IS CRUCIAL!
+    "types": ["node"],  // VERY IMPORTANT!
     "resolveJsonModule": true,
     "paths": {
       "*": ["./src/*"]
@@ -32,5 +32,6 @@
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
-  }
+  },
+  "exclude": ["node_modules", "www"]
 }
