@@ -1,11 +1,30 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Temperature Log</ion-title>
+    <ion-buttons slot="primary">
+      <ion-button (click)="goHome()">
+        <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <h1>Temperature Log</h1>
-  <p>This page will display the logged temperature data.</p>
+  <div *ngFor="let day of dailyLogs">
+    <h2>{{ day.date }}</h2>
+    <ion-button expand="full" (click)="exportToPDF(day.date)">Export {{ day.date }} to PDF</ion-button>
 
-  </ion-content>
+    <ion-list>
+      <ion-item *ngFor="let log of day.logs">
+        <ion-label>
+          <h2>{{ log.fridgeName }}</h2>
+          <p>Temperature: {{ log.temperature }} °C</p>
+          <p>Logged at: {{ log.timestamp | date:'medium' }}</p>
+        </ion-label>
+        <ion-button slot="end" color="danger" (click)="log.id && deleteLogEntry(log.id)">
+          <ion-icon slot="icon-only" name="trash"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  </div>
+</ion-content>

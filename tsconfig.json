@@ -1,4 +1,4 @@
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
+/* To learn more about this file see: https://angular.io/config/tsconfig.json */
 {
   "compileOnSave": false,
   "compilerOptions": {
@@ -18,13 +18,20 @@
     "importHelpers": true,
     "target": "es2022",
     "module": "es2020",
-    "lib": ["es2018", "dom"],
-    "useDefineForClassFields": false
+    "lib": ["es2022", "dom"],
+    "useDefineForClassFields": false,
+    "allowSyntheticDefaultImports": true,
+    "types": ["node"],  // VERY IMPORTANT!
+    "resolveJsonModule": true,
+    "paths": {
+      "*": ["./src/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
     "strictTemplates": true
-  }
+  },
+  "exclude": ["node_modules", "www"]
 }
