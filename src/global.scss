@@ -35,3 +35,12 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/*
+ * Workaround for status bar overlap when --ion-safe-area-top is 0px.
+ * Adjust the pixel value below based on visual testing on your device.
+ * 24px is a common starting point, but might need to be higher (e.g., 30px, 40px).
+ */
+ html.plt-android ion-header ion-toolbar {
+  padding-top: 40px;
+}
