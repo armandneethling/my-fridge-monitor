@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { collection, query, orderBy, onSnapshot, Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { DatePipe } from '@angular/common';
 import jsPDF from 'jspdf';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 
 export interface TemperatureLog {
   fridgeValue: string;
@@ -108,15 +109,49 @@ export class LogPage implements OnInit {
 
     pdf.setFontSize(12);
     logsToExport.forEach(log => {
-      pdf.text(`Fridge: ${log.fridgeName}`, 10, y);
-      y += 5;
-      pdf.text(`Temperature: ${log.temperature} °C`, 10, y);
-      y += 5;
-      pdf.text(`Logged at: ${this.datePipe.transform(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}`, 10, y);
+      // Prevent PDF generation error if data is missing
+      const fridgeName = log.fridgeName || 'N/A';
+      const temperature = log.temperature !== null ? log.temperature : 'N/A';
+      const timestamp = log.timestamp ? this.datePipe.transform(log.timestamp, 'yyyy-MM-dd HH:mm:ss') : 'N/A';
+
+      pdf.text(`Fridge: ${fridgeName}`, 10, y);
+      y += 7; // Adjust spacing slightly if needed
+      pdf.text(`Temperature: ${temperature} °C`, 10, y);
+      y += 7;
+      pdf.text(`Logged at: ${timestamp}`, 10, y);
       y += 10; // Add spacing between entries
+
+      // Add page break if content gets too long
+      if (y > 280) {
+        pdf.addPage();
+        y = 20; // Reset Y position for new page
+      }
     });
 
-    pdf.save(`temperature-logs-${date}.pdf`);
+    try {
+      // Get the PDF data as a base64 string
+      // pdf.output('datauristring') returns the full Data URI "data:application/pdf;base64,...."
+      // We need to extract just the base64 part after the comma.
+      const pdfDataUri = pdf.output('datauristring');
+      const base64Data = pdfDataUri.substring(pdfDataUri.indexOf(',') + 1);
+
+      const fileName = `temperature-logs-${date}.pdf`;
+
+      // Write the file using Capacitor Filesystem
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents, // Try saving to Documents directory
+      });
+
+      console.log('Wrote file:', result);
+      // Notify the user where the file was saved
+      await this.presentToast(`PDF saved: ${result.uri}`);
+
+    } catch (e) {
+      console.error('Unable to write file', e);
+      await this.presentToast('Error saving PDF.', 'danger');
+    }
   }
 
   async presentToast(message: string, color: string = 'success') {
