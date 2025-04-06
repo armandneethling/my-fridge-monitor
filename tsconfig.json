@@ -21,7 +21,7 @@
     "lib": ["es2022", "dom"],
     "useDefineForClassFields": false,
     "allowSyntheticDefaultImports": true,
-    "types": ["node"],  // VERY IMPORTANT!
+    "types": ["node", "jasmine"],
     "resolveJsonModule": true,
     "paths": {
       "*": ["./src/*"]
