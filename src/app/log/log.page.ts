@@ -154,6 +154,64 @@ export class LogPage implements OnInit {
     }
   }
 
+  async deleteAllLogsForDate(date: string) {
+    // Find the logs for the specific date
+    const dayData = this.dailyLogs.find(group => group.date === date);
+    const logsToDelete = dayData?.logs || [];
+
+    if (logsToDelete.length === 0) {
+      await this.presentToast('No logs found for this date.', 'warning');
+      return;
+    }
+
+    // Get the IDs of the logs to delete
+    const logIdsToDelete = logsToDelete.map(log => log.id).filter(id => id !== undefined) as string[];
+
+    if (logIdsToDelete.length === 0) {
+      // Should not happen if logsToDelete was not empty, but good practice
+      console.error('Found logs but no IDs for date:', date);
+      await this.presentToast('Error finding log IDs.', 'danger');
+      return;
+    }
+
+    const alert = await this.alertController.create({
+      header: 'Confirm Delete',
+      message: `Are you sure you want to delete all ${logIdsToDelete.length} log(s) for ${date}? This cannot be undone.`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Delete All',
+          handler: async () => {
+            // --- Deletion Logic ---
+            try {
+              // Create an array of delete promises
+              const deletePromises = logIdsToDelete.map(logId => {
+                const logEntryDocRef = doc(this.firestore, 'temperatureLogs', logId);
+                return deleteDoc(logEntryDocRef);
+              });
+
+              // Wait for all delete operations to complete
+              await Promise.all(deletePromises);
+
+              console.log(`Deleted ${logIdsToDelete.length} logs for date: ${date}`);
+              await this.presentToast(`Successfully deleted all logs for ${date}.`);
+              // The onSnapshot listener should automatically update the view
+
+            } catch (error) {
+              console.error(`Error deleting logs for date ${date}:`, error);
+              await this.presentToast('Error deleting logs.', 'danger');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
   async presentToast(message: string, color: string = 'success') {
     const toast = await this.toastController.create({
       message: message,

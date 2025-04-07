@@ -12,7 +12,15 @@
 <ion-content [fullscreen]="true">
   <div *ngFor="let day of dailyLogs">
     <h2>{{ day.date }}</h2>
-    <ion-button expand="full" (click)="exportToPDF(day.date)">Export {{ day.date }} to PDF</ion-button>
+
+    <div class="daily-actions ion-padding-horizontal ion-padding-bottom">
+       <ion-button expand="block" (click)="exportToPDF(day.date)">
+          Export to PDF
+       </ion-button>
+       <ion-button expand="block" color="danger" (click)="deleteAllLogsForDate(day.date)">
+          Delete All Logs
+       </ion-button>
+    </div>
 
     <ion-list>
       <ion-item *ngFor="let log of day.logs">
