@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 
-// Add this near the top of the file
 def keystorePropertiesFile = rootProject.file('../keystore.properties')
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
@@ -31,8 +30,6 @@ android {
           storePassword keystoreProperties.storePassword
           keyAlias keystoreProperties.keyAlias
           keyPassword keystoreProperties.keyPassword
-        } else {
-          println("Keystore properties file not found for release signing.")
         }
       }
     }
