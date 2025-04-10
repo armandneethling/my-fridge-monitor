@@ -90,6 +90,7 @@ To run the app in your browser for quick development and testing (without native
 
 ```sh
 ionic serve
+```
 
 ## Author
 
