@@ -31,7 +31,10 @@
       placeholder="Enter temperature"
       clearInput="true">
     </ion-input>
-  </ion-item>
+    <ion-button slot="end" fill="clear" (click)="toggleSign()" aria-label="Toggle Temperature Sign">
+      +/-
+    </ion-button>
+    </ion-item>
 
   <ion-button class="ion-margin-top" expand="full" (click)="logTemperature()">Log Temperature</ion-button>
   <ion-button expand="full" fill="outline" (click)="goToLog()">View Temperature Log</ion-button>

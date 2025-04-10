@@ -86,6 +86,17 @@ export class HomePage {
     await alert.present();
   }
 
+  toggleSign() {
+    if (this.temperature !== null && this.temperature !== undefined) {
+      // Convert to number to perform math
+      const currentTemp = Number(this.temperature);
+      // Check if it's actually a number before toggling
+      if (!isNaN(currentTemp)) {
+        this.temperature = currentTemp * -1;
+      }
+    }
+  }
+
   fridgeChanged(event: any) {
     this.selectedFridgeValue = event.detail.value;
 
