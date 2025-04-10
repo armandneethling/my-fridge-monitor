@@ -25,3 +25,8 @@
 #container a {
   text-decoration: none;
 }
+
+ion-input[type="text"][inputmode="decimal"] {
+  --padding-top: 20px;
+  --padding-bottom: 2px;
+}
