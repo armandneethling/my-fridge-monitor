@@ -15,6 +15,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { firebaseConfig } from './environments/firebase';
+import { provideAuth, getAuth } from '@angular/fire/auth';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
@@ -32,5 +33,6 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideFirebaseApp(() => initializeApp(firebaseConfig)),
     provideFirestore(() => getFirestore()),
+    provideAuth(() => getAuth()),
   ]
 }).catch((err) => console.error(err));
