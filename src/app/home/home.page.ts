@@ -1,8 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, AlertController, IonSelect } from '@ionic/angular';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { collection, addDoc, Firestore } from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
+import { addIcons } from 'ionicons';
+import { logOutOutline } from 'ionicons/icons';
+
+// Register logout icon globally
+addIcons({
+  'log-out-outline': logOutOutline,
+});
 
 export interface TemperatureLog {
   fridgeValue: string;
@@ -17,28 +25,34 @@ export interface TemperatureLog {
   styleUrls: ['home.page.scss'],
   standalone: true,
   imports: [IonicModule, FormsModule],
-  providers: [],
 })
 export class HomePage {
-  selectedFridgeValue: string = ''; // Rename selectedFridge to selectedFridgeValue
-  selectedFridgeName: string = 'Unknown Fridge'; // Add a property for the name
+  selectedFridgeValue: string = '';
+  selectedFridgeName: string = 'Unknown Fridge';
   temperature: number | null = null;
+  loading: boolean = false;
 
   private toastController = inject(ToastController);
   private router = inject(Router);
   private alertController = inject(AlertController);
   private firestore: Firestore = inject(Firestore);
+  private auth: Auth = inject(Auth);
 
   constructor() {}
 
   async logTemperature() {
+    if (this.loading) return;
+    this.loading = true;
+
     if (!this.selectedFridgeValue) {
       await this.presentAlert('Error', 'Please select a fridge.');
+      this.loading = false;
       return;
     }
 
     if (this.temperature === null || this.temperature === undefined) {
       await this.presentAlert('Error', 'Please enter the temperature.');
+      this.loading = false;
       return;
     }
 
@@ -60,6 +74,8 @@ export class HomePage {
     } catch (error) {
       console.error('Error logging temperature:', error);
       await this.presentAlert('Error', 'Failed to log temperature. Please try again.');
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -87,30 +103,29 @@ export class HomePage {
   }
 
   toggleSign() {
-    if (this.temperature !== null && this.temperature !== undefined) {
-      // Convert to number to perform math
-      const currentTemp = Number(this.temperature);
-      // Check if it's actually a number before toggling
-      if (!isNaN(currentTemp)) {
-        this.temperature = currentTemp * -1;
-      }
+    if (typeof this.temperature === 'number' && !isNaN(this.temperature)) {
+      this.temperature = -this.temperature;
     }
   }
 
-  fridgeChanged(event: any) {
+  fridgeChanged(event: CustomEvent) {
     this.selectedFridgeValue = event.detail.value;
-
-    console.log('fridgeChanged called');
-    console.log('selectedValue:', event.detail.value);
-    console.log('event.target:', event.target);
-    console.log('event.detail:', event.detail);
 
     // Access selected text from ion-select-option elements
     const selectElement = event.target as HTMLIonSelectElement;
     const selectedText = Array.from(selectElement.querySelectorAll(`ion-select-option[value="${event.detail.value}"]`))
       .map(option => option.textContent ? option.textContent.trim() : '')[0];
     this.selectedFridgeName = selectedText || 'Unknown Fridge';
+  }
 
-    console.log('selectedFridgeName:', this.selectedFridgeName);
+  async logout() {
+    try {
+      await this.auth.signOut();
+      await this.presentToast('Logged out successfully');
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('Logout error:', error);
+      await this.presentToast('Error logging out. Please try again.');
+    }
   }
 }
