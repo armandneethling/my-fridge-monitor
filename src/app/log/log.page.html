@@ -9,8 +9,28 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <div *ngFor="let day of dailyLogs">
+<ion-content [fullscreen]="true" class="log-content ion-padding">
+  <ion-label>Pick a Date</ion-label>
+  <ion-item>
+    <ion-datetime
+      display-format="MMM DD, YYYY"
+      picker-format="MMM DD, YYYY"
+      presentation="date"
+      [(ngModel)]="selectedDate"
+      (ionChange)="filterLogsByDate()"
+      max="{{ maxDate }}"
+      cancel-text="Cancel"
+      done-text="Done"
+      placeholder="Select date"
+    ></ion-datetime>
+  </ion-item>
+
+
+  <div *ngIf="filteredLogs.length === 0" class="no-logs-message ion-text-center ion-padding">
+    No logs found for selected date.
+  </div>
+
+  <div *ngFor="let day of filteredLogs">
     <h2>{{ day.date }}</h2>
 
     <div class="daily-actions ion-padding-horizontal ion-padding-bottom">

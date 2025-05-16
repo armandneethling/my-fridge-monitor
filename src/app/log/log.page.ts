@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { collection, query, orderBy, onSnapshot, Firestore, deleteDoc, doc } from '@angular/fire/firestore';
 import { DatePipe } from '@angular/common';
 import jsPDF from 'jspdf';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FormsModule } from '@angular/forms';
 
 export interface TemperatureLog {
   fridgeValue: string;
@@ -25,18 +26,25 @@ interface DailyLogs {
   templateUrl: './log.page.html',
   styleUrls: ['./log.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule],
-  providers: [DatePipe], // Provide DatePipe
+  imports: [IonicModule, CommonModule, FormsModule],
+  providers: [DatePipe],
 })
 export class LogPage implements OnInit {
   private router = inject(Router);
   private firestore: Firestore = inject(Firestore);
   private alertController = inject(AlertController);
   private toastController = inject(ToastController);
-  private datePipe = inject(DatePipe); // Inject DatePipe
-  public dailyLogs: DailyLogs[] = [];
+  private datePipe = inject(DatePipe);
 
-  constructor() {}
+  public dailyLogs: DailyLogs[] = [];
+  public filteredLogs: DailyLogs[] = [];
+  public selectedDate: string | null = null;
+  public maxDate: string;
+
+  constructor() {
+    const today = new Date();
+    this.maxDate = today.toISOString().split('T')[0];
+  }
 
   ngOnInit() {
     this.getTemperatureLogs();
@@ -48,14 +56,14 @@ export class LogPage implements OnInit {
 
     onSnapshot(q, (snapshot) => {
       this.dailyLogs = this.groupByDate(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TemperatureLog)));
-      console.log('Temperature logs updated:', this.dailyLogs);
+      this.applyFilter();
     });
   }
 
   groupByDate(logs: TemperatureLog[]): DailyLogs[] {
     const grouped: { [date: string]: TemperatureLog[] } = {};
     logs.forEach(log => {
-      const date = log.timestamp.split('T')[0]; // Extract the date part
+      const date = log.timestamp.split('T')[0];
       if (!grouped[date]) {
         grouped[date] = [];
       }
@@ -65,25 +73,36 @@ export class LogPage implements OnInit {
     return Object.keys(grouped).map(date => ({ date, logs: grouped[date] }));
   }
 
+  filterLogsByDate() {
+    this.applyFilter();
+  }
+
+  applyFilter() {
+  if (!this.selectedDate) {
+    this.filteredLogs = this.dailyLogs;
+  } else {
+    // Normalize selectedDate to YYYY-MM-DD (it should already be in that format)
+    const selected = this.selectedDate.split('T')[0];
+
+    this.filteredLogs = this.dailyLogs.filter(day => day.date === selected);
+  }
+}
+
+
   async deleteLogEntry(logId: string) {
     const alert = await this.alertController.create({
       header: 'Confirm Delete',
       message: 'Are you sure you want to delete this log entry?',
       buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
+        { text: 'Cancel', role: 'cancel' },
         {
           text: 'Delete',
           handler: async () => {
             try {
               const logEntryDocRef = doc(this.firestore, 'temperatureLogs', logId);
               await deleteDoc(logEntryDocRef);
-              console.log('Log entry deleted:', logId);
               this.presentToast('Log entry deleted successfully!');
             } catch (error) {
-              console.error('Error deleting log entry:', error);
               this.presentToast('Error deleting log entry!', 'danger');
             }
           },
@@ -102,107 +121,80 @@ export class LogPage implements OnInit {
     const pdf = new jsPDF();
     const logsToExport = this.dailyLogs.find(group => group.date === date)?.logs || [];
 
-    let y = 20; // Initial Y position for content
+    let y = 20;
     pdf.setFontSize(16);
     pdf.text(`Temperature Logs for ${date}`, 10, y);
     y += 10;
 
     pdf.setFontSize(12);
     logsToExport.forEach(log => {
-      // Prevent PDF generation error if data is missing
       const fridgeName = log.fridgeName || 'N/A';
       const temperature = log.temperature !== null ? log.temperature : 'N/A';
       const timestamp = log.timestamp ? this.datePipe.transform(log.timestamp, 'yyyy-MM-dd HH:mm:ss') : 'N/A';
 
       pdf.text(`Fridge: ${fridgeName}`, 10, y);
-      y += 7; // Adjust spacing slightly if needed
+      y += 7;
       pdf.text(`Temperature: ${temperature} °C`, 10, y);
       y += 7;
       pdf.text(`Logged at: ${timestamp}`, 10, y);
-      y += 10; // Add spacing between entries
+      y += 10;
 
-      // Add page break if content gets too long
       if (y > 280) {
         pdf.addPage();
-        y = 20; // Reset Y position for new page
+        y = 20;
       }
     });
 
     try {
-      // Get the PDF data as a base64 string
-      // pdf.output('datauristring') returns the full Data URI "data:application/pdf;base64,...."
-      // We need to extract just the base64 part after the comma.
       const pdfDataUri = pdf.output('datauristring');
       const base64Data = pdfDataUri.substring(pdfDataUri.indexOf(',') + 1);
-
       const fileName = `temperature-logs-${date}.pdf`;
 
-      // Write the file using Capacitor Filesystem
       const result = await Filesystem.writeFile({
         path: fileName,
         data: base64Data,
-        directory: Directory.Documents, // Try saving to Documents directory
+        directory: Directory.Documents,
       });
 
-      console.log('Wrote file:', result);
-      // Notify the user where the file was saved
-      await this.presentToast(`PDF saved: ${result.uri}`);
-
+      this.presentToast(`PDF saved: ${result.uri}`);
     } catch (e) {
-      console.error('Unable to write file', e);
-      await this.presentToast('Error saving PDF.', 'danger');
+      this.presentToast('Error saving PDF.', 'danger');
     }
   }
 
   async deleteAllLogsForDate(date: string) {
-    // Find the logs for the specific date
     const dayData = this.dailyLogs.find(group => group.date === date);
     const logsToDelete = dayData?.logs || [];
 
     if (logsToDelete.length === 0) {
-      await this.presentToast('No logs found for this date.', 'warning');
+      this.presentToast('No logs found for this date.', 'warning');
       return;
     }
 
-    // Get the IDs of the logs to delete
     const logIdsToDelete = logsToDelete.map(log => log.id).filter(id => id !== undefined) as string[];
 
     if (logIdsToDelete.length === 0) {
-      // Should not happen if logsToDelete was not empty, but good practice
-      console.error('Found logs but no IDs for date:', date);
-      await this.presentToast('Error finding log IDs.', 'danger');
+      this.presentToast('Error finding log IDs.', 'danger');
       return;
     }
 
     const alert = await this.alertController.create({
       header: 'Confirm Delete',
-      message: `Are you sure you want to delete all ${logIdsToDelete.length} log(s) for ${date}? This cannot be undone.`,
+      message: `Are you sure you want to delete all ${logIdsToDelete.length} log(s) for ${date}? This action cannot be undone.`,
       buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
+        { text: 'Cancel', role: 'cancel' },
         {
           text: 'Delete All',
           handler: async () => {
-            // --- Deletion Logic ---
             try {
-              // Create an array of delete promises
               const deletePromises = logIdsToDelete.map(logId => {
                 const logEntryDocRef = doc(this.firestore, 'temperatureLogs', logId);
                 return deleteDoc(logEntryDocRef);
               });
-
-              // Wait for all delete operations to complete
               await Promise.all(deletePromises);
-
-              console.log(`Deleted ${logIdsToDelete.length} logs for date: ${date}`);
-              await this.presentToast(`Successfully deleted all logs for ${date}.`);
-              // The onSnapshot listener should automatically update the view
-
+              this.presentToast(`Successfully deleted all logs for ${date}.`);
             } catch (error) {
-              console.error(`Error deleting logs for date ${date}:`, error);
-              await this.presentToast('Error deleting logs.', 'danger');
+              this.presentToast('Error deleting logs.', 'danger');
             }
           },
         },
@@ -214,10 +206,10 @@ export class LogPage implements OnInit {
 
   async presentToast(message: string, color: string = 'success') {
     const toast = await this.toastController.create({
-      message: message,
+      message,
       duration: 2000,
       position: 'bottom',
-      color: color
+      color,
     });
     await toast.present();
   }

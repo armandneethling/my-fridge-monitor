@@ -1,0 +1,41 @@
+.log-content {
+  --background: var(--ion-background-color);
+  padding: 0 16px;
+}
+
+ion-item {
+  --padding-start: 0;
+  --padding-end: 0;
+  margin-bottom: 16px;
+}
+
+ion-label {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+h2 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--ion-color-primary);
+}
+
+.daily-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.daily-actions ion-button {
+  flex: 1 1 48%;
+}
+
+.no-logs-message {
+  font-size: 1.1rem;
+  color: var(--ion-color-medium);
+  margin-top: 40px;
+}

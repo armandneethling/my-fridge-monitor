@@ -1,46 +1,58 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Log Temperatures</ion-title>
+    <ion-title class="ion-text-center ion-text-bold">Log Temperatures</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="logout()" aria-label="Logout">
-        <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" ion-padding>
-  <ion-item class="ion-margin-bottom">
-    <ion-label>Select Fridge</ion-label>
-    <ion-select
-      [(ngModel)]="selectedFridgeValue"
-      (ionChange)="fridgeChanged($event)"
-      interface="action-sheet"
-    >
-      <ion-select-option value="fridge1">Cooldrink Fridge</ion-select-option>
-      <ion-select-option value="fridge2">Salad Fridge</ion-select-option>
-      <ion-select-option value="fridge3">Dough Fridge</ion-select-option>
-      <ion-select-option value="fridge4">Walk-in Fridge</ion-select-option>
-      <ion-select-option value="fridge5">Freezer</ion-select-option>
-      <ion-select-option value="fridge6">Proofer</ion-select-option>
-      <ion-select-option value="fridge7">Make-table Fridge</ion-select-option>
-    </ion-select>
-  </ion-item>
+<ion-content [fullscreen]="true" class="modern-content ion-padding">
+  <ion-card class="modern-card">
+    <ion-card-content>
+      <ion-item lines="none" class="modern-item">
+        <ion-label position="stacked">Select Fridge</ion-label>
+        <ion-select
+          [(ngModel)]="selectedFridgeValue"
+          (ionChange)="fridgeChanged($event)"
+          interface="action-sheet"
+          placeholder="Choose a fridge"
+          name="fridgeSelect"
+          required
+        >
+          <ion-select-option value="fridge1">Cooldrink Fridge</ion-select-option>
+          <ion-select-option value="fridge2">Salad Fridge</ion-select-option>
+          <ion-select-option value="fridge3">Dough Fridge</ion-select-option>
+          <ion-select-option value="fridge4">Walk-in Fridge</ion-select-option>
+          <ion-select-option value="fridge5">Freezer</ion-select-option>
+          <ion-select-option value="fridge6">Proofer</ion-select-option>
+          <ion-select-option value="fridge7">Make-table Fridge</ion-select-option>
+        </ion-select>
+      </ion-item>
 
-  <ion-item class="ion-margin-bottom">
-    <ion-label position="floating">Temperature (°C)</ion-label>
-    <ion-input
-      type="text"
-      inputmode="decimal"
-      [(ngModel)]="temperature"
-      placeholder="Enter temperature"
-      clearInput="true">
-    </ion-input>
-    <ion-button slot="end" fill="solid" size="large" (click)="toggleSign()" aria-label="Toggle Temperature Sign">
-      +/-
-    </ion-button>
-    </ion-item>
+      <ion-item lines="none" class="modern-item">
+        <ion-label position="stacked" for="tempInput">Temperature (°C)</ion-label>
+        <ion-input
+          id="tempInput"
+          type="text"
+          inputmode="decimal"
+          [(ngModel)]="temperature"
+          placeholder="Enter temperature"
+          clearInput="true"
+          name="temperatureInput"
+          required
+          aria-label="Temperature input"
+        ></ion-input>
+        <ion-button slot="end" fill="outline" size="small" (click)="toggleSign()" aria-label="Toggle Temperature Sign">
+          +/-
+        </ion-button>
+      </ion-item>
 
-  <ion-button class="ion-margin-top" expand="full" (click)="logTemperature()">Log Temperature</ion-button>
-  <ion-button expand="full" fill="outline" (click)="goToLog()">View Temperature Log</ion-button>
+      <ion-button expand="block" class="modern-btn" (click)="logTemperature()" [disabled]="!selectedFridgeValue || !temperature">
+        Log Temperature
+      </ion-button>
+      <ion-button expand="block" fill="outline" class="modern-btn-outline" (click)="goToLog()">
+        View Temperature Log
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

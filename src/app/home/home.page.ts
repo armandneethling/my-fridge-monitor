@@ -117,15 +117,4 @@ export class HomePage {
       .map(option => option.textContent ? option.textContent.trim() : '')[0];
     this.selectedFridgeName = selectedText || 'Unknown Fridge';
   }
-
-  async logout() {
-    try {
-      await this.auth.signOut();
-      await this.presentToast('Logged out successfully');
-      this.router.navigate(['/login']);
-    } catch (error) {
-      console.error('Logout error:', error);
-      await this.presentToast('Error logging out. Please try again.');
-    }
-  }
 }
