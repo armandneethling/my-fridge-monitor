@@ -1,9 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { collection, query, orderBy, onSnapshot, Firestore, deleteDoc, doc } from '@angular/fire/firestore';
-import { DatePipe } from '@angular/common';
 import jsPDF from 'jspdf';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FormsModule } from '@angular/forms';
@@ -28,6 +27,7 @@ interface DailyLogs {
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule],
   providers: [DatePipe],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class LogPage implements OnInit {
   private router = inject(Router);
@@ -40,6 +40,9 @@ export class LogPage implements OnInit {
   public filteredLogs: DailyLogs[] = [];
   public selectedDate: string | null = null;
   public maxDate: string;
+  public loading = true;
+  public exportingPDF = false;
+  public viewMode: 'all' | 'date' = 'date'; // default to 'date'
 
   constructor() {
     const today = new Date();
@@ -54,23 +57,41 @@ export class LogPage implements OnInit {
     const temperatureLogsCollection = collection(this.firestore, 'temperatureLogs');
     const q = query(temperatureLogsCollection, orderBy('timestamp', 'desc'));
 
-    onSnapshot(q, (snapshot) => {
-      this.dailyLogs = this.groupByDate(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TemperatureLog)));
-      this.applyFilter();
-    });
+    this.loading = true;
+    onSnapshot(
+      q,
+      (snapshot) => {
+        this.dailyLogs = this.groupByDate(
+          snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as TemperatureLog))
+        );
+        this.applyFilter();
+        this.loading = false;
+      },
+      (error) => {
+        this.presentToast('Error loading logs.', 'danger');
+        this.loading = false;
+      }
+    );
   }
 
   groupByDate(logs: TemperatureLog[]): DailyLogs[] {
     const grouped: { [date: string]: TemperatureLog[] } = {};
-    logs.forEach(log => {
-      const date = log.timestamp.split('T')[0];
+    logs.forEach((log) => {
+      const date = this.datePipe.transform(log.timestamp, 'yyyy-MM-dd') || '';
       if (!grouped[date]) {
         grouped[date] = [];
       }
       grouped[date].push(log);
     });
 
-    return Object.keys(grouped).map(date => ({ date, logs: grouped[date] }));
+    return Object.keys(grouped).map((date) => ({ date, logs: grouped[date] }));
+  }
+
+  onViewModeChange() {
+    if (this.viewMode === 'all') {
+      this.selectedDate = null; // clear date filter when viewing all
+    }
+    this.applyFilter();
   }
 
   filterLogsByDate() {
@@ -78,16 +99,17 @@ export class LogPage implements OnInit {
   }
 
   applyFilter() {
-  if (!this.selectedDate) {
-    this.filteredLogs = this.dailyLogs;
-  } else {
-    // Normalize selectedDate to YYYY-MM-DD (it should already be in that format)
-    const selected = this.selectedDate.split('T')[0];
-
-    this.filteredLogs = this.dailyLogs.filter(day => day.date === selected);
+    if (this.viewMode === 'all') {
+      this.filteredLogs = this.dailyLogs;
+    } else if (this.viewMode === 'date') {
+      if (!this.selectedDate) {
+        this.filteredLogs = [];
+      } else {
+        const selected = this.selectedDate.split('T')[0];
+        this.filteredLogs = this.dailyLogs.filter((day) => day.date === selected);
+      }
+    }
   }
-}
-
 
   async deleteLogEntry(logId: string) {
     const alert = await this.alertController.create({
@@ -118,8 +140,11 @@ export class LogPage implements OnInit {
   }
 
   async exportToPDF(date: string) {
+    if (this.exportingPDF) return;
+    this.exportingPDF = true;
+
     const pdf = new jsPDF();
-    const logsToExport = this.dailyLogs.find(group => group.date === date)?.logs || [];
+    const logsToExport = this.dailyLogs.find((group) => group.date === date)?.logs || [];
 
     let y = 20;
     pdf.setFontSize(16);
@@ -127,7 +152,7 @@ export class LogPage implements OnInit {
     y += 10;
 
     pdf.setFontSize(12);
-    logsToExport.forEach(log => {
+    logsToExport.forEach((log) => {
       const fridgeName = log.fridgeName || 'N/A';
       const temperature = log.temperature !== null ? log.temperature : 'N/A';
       const timestamp = log.timestamp ? this.datePipe.transform(log.timestamp, 'yyyy-MM-dd HH:mm:ss') : 'N/A';
@@ -159,11 +184,13 @@ export class LogPage implements OnInit {
       this.presentToast(`PDF saved: ${result.uri}`);
     } catch (e) {
       this.presentToast('Error saving PDF.', 'danger');
+    } finally {
+      this.exportingPDF = false;
     }
   }
 
   async deleteAllLogsForDate(date: string) {
-    const dayData = this.dailyLogs.find(group => group.date === date);
+    const dayData = this.dailyLogs.find((group) => group.date === date);
     const logsToDelete = dayData?.logs || [];
 
     if (logsToDelete.length === 0) {
@@ -171,7 +198,7 @@ export class LogPage implements OnInit {
       return;
     }
 
-    const logIdsToDelete = logsToDelete.map(log => log.id).filter(id => id !== undefined) as string[];
+    const logIdsToDelete = logsToDelete.map((log) => log.id).filter((id) => id !== undefined) as string[];
 
     if (logIdsToDelete.length === 0) {
       this.presentToast('Error finding log IDs.', 'danger');
@@ -187,7 +214,7 @@ export class LogPage implements OnInit {
           text: 'Delete All',
           handler: async () => {
             try {
-              const deletePromises = logIdsToDelete.map(logId => {
+              const deletePromises = logIdsToDelete.map((logId) => {
                 const logEntryDocRef = doc(this.firestore, 'temperatureLogs', logId);
                 return deleteDoc(logEntryDocRef);
               });

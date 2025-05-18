@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-title>Temperature Log</ion-title>
     <ion-buttons slot="primary">
-      <ion-button (click)="goHome()">
+      <ion-button (click)="goHome()" aria-label="Go back home">
         <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -10,36 +10,65 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="log-content ion-padding">
-  <ion-item>
-    <ion-label>Pick a Date</ion-label>
-    <ion-datetime
-      display-format="MMM DD, YYYY"
-      picker-format="MMM DD, YYYY"
-      presentation="date"
-      [(ngModel)]="selectedDate"
-      (ionChange)="filterLogsByDate()"
-      max="{{ maxDate }}"
-      cancel-text="Cancel"
-      done-text="Done"
-      placeholder="Select date"
-    ></ion-datetime>
+
+  <!-- Loading spinner -->
+  <ion-spinner *ngIf="loading" name="crescent" class="ion-margin"></ion-spinner>
+
+  <!-- Toggle segment -->
+  <ion-segment [(ngModel)]="viewMode" (ionChange)="onViewModeChange()" class="ion-margin-bottom">
+    <ion-segment-button value="all">
+      All Logs
+    </ion-segment-button>
+    <ion-segment-button value="date">
+      By Date
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Date picker with centered label -->
+  <ion-item lines="none" class="ion-justify-content-center date-picker-wrapper" *ngIf="viewMode === 'date'">
+    <ion-label class="date-picker-label">Select Date</ion-label>
+    <ion-datetime-button datetime="datetime" aria-label="Select date"></ion-datetime-button>
   </ion-item>
 
+  <ion-modal [keepContentsMounted]="true" trigger="datetime">
+    <ng-template>
+      <ion-datetime
+        id="datetime"
+        presentation="date"
+        [(ngModel)]="selectedDate"
+        (ionChange)="filterLogsByDate()"
+        [max]="maxDate"
+        cancel-text="Cancel"
+        done-text="Done"
+        style="--min-width: 300px; --min-height: 320px;"
+      ></ion-datetime>
+    </ng-template>
+  </ion-modal>
 
-  <div *ngIf="filteredLogs.length === 0" class="no-logs-message ion-text-center ion-padding">
+  <!-- No logs message -->
+  <div *ngIf="!loading && filteredLogs.length === 0 && (viewMode === 'all' || (viewMode === 'date' && selectedDate))" class="no-logs-message ion-text-center ion-padding">
     No logs found for selected date.
   </div>
 
+  <!-- Logs grouped by date -->
   <div *ngFor="let day of filteredLogs">
     <h2>{{ day.date }}</h2>
 
     <div class="daily-actions ion-padding-horizontal ion-padding-bottom">
-       <ion-button expand="block" (click)="exportToPDF(day.date)">
-          Export to PDF
-       </ion-button>
-       <ion-button expand="block" color="danger" (click)="deleteAllLogsForDate(day.date)">
-          Delete All Logs
-       </ion-button>
+      <ion-button
+        expand="block"
+        (click)="exportToPDF(day.date)"
+        [disabled]="exportingPDF"
+        aria-label="Export logs to PDF for {{ day.date }}">
+        Export to PDF
+      </ion-button>
+      <ion-button
+        expand="block"
+        color="danger"
+        (click)="deleteAllLogsForDate(day.date)"
+        aria-label="Delete all logs for {{ day.date }}">
+        Delete All Logs
+      </ion-button>
     </div>
 
     <ion-list>
@@ -49,7 +78,11 @@
           <p>Temperature: {{ log.temperature }} °C</p>
           <p>Logged at: {{ log.timestamp | date:'medium' }}</p>
         </ion-label>
-        <ion-button slot="end" color="danger" (click)="log.id && deleteLogEntry(log.id)">
+        <ion-button
+          slot="end"
+          color="danger"
+          (click)="log.id && deleteLogEntry(log.id)"
+          aria-label="Delete log entry for {{ log.fridgeName }}">
           <ion-icon slot="icon-only" name="trash"></ion-icon>
         </ion-button>
       </ion-item>
