@@ -102,9 +102,18 @@ export class HomePage {
     await alert.present();
   }
 
+  onTemperatureChange(value: string | number) {
+    const parsed = Number(value);
+    this.temperature = isNaN(parsed) ? null : parsed;
+  }
+
   toggleSign() {
-    if (typeof this.temperature === 'number' && !isNaN(this.temperature)) {
-      this.temperature = -this.temperature;
+    if (this.temperature !== null && this.temperature !== undefined) {
+      let tempNumber = Number(this.temperature);
+      if (!isNaN(tempNumber)) {
+        tempNumber = -tempNumber;
+        this.temperature = tempNumber;
+      }
     }
   }
 

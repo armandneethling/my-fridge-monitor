@@ -33,21 +33,24 @@
         <ion-label position="stacked" for="tempInput">Temperature (°C)</ion-label>
         <ion-input
           id="tempInput"
-          type="text"
+          type="number"
           inputmode="decimal"
-          [(ngModel)]="temperature"
+          [ngModel]="temperature"
+          (ngModelChange)="onTemperatureChange($event)"
           placeholder="Enter temperature"
           clearInput="true"
           name="temperatureInput"
           required
           aria-label="Temperature input"
         ></ion-input>
-        <ion-button slot="end" fill="outline" size="small" (click)="toggleSign()" aria-label="Toggle Temperature Sign">
+        <ion-button slot="end" fill="outline" size="small" (click)="toggleSign()"
+          aria-label="Toggle Temperature Sign" [disabled]="temperature === null || temperature === undefined">
           +/-
         </ion-button>
       </ion-item>
 
-      <ion-button expand="block" class="modern-btn" (click)="logTemperature()" [disabled]="!selectedFridgeValue || !temperature">
+      <ion-button expand="block" class="modern-btn" (click)="logTemperature()"
+        [disabled]="!selectedFridgeValue || temperature === null || temperature === undefined">
         Log Temperature
       </ion-button>
       <ion-button expand="block" fill="outline" class="modern-btn-outline" (click)="goToLog()">
